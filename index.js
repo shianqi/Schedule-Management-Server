@@ -37,19 +37,38 @@ server.listen(3000, () => {
 
 io.on('connection', (socket) => {
   console.log('a user connected')
+
   socket.on('disconnect', () => {
     console.log('user disconnected')
   })
+
+  // 添加新事件
   socket.on('addEvent', (data) => {
-    console.time('addEvent')
     new Event({
       ...data
     }).save(() => {
       socket.emit('dataAddSuccess')
       socket.broadcast.emit('dataUpdate')
-      console.timeEnd('addEvent')
     })
   })
+
+  // 删除某条事件
+  socket.on('deleteEvent', async (_id) => {
+    await Event.findByIdAndRemove(_id).catch(() => {
+      io.emit('dataUpdate')
+    })
+    io.emit('dataUpdate')
+  })
+
+  // 修改某条事件
+  socket.on('modifyEvent', async (data) => {
+    await Event.findByIdAndUpdate(data._id, { $set: { ...data } }).catch(() => {
+      io.emit('dataUpdate')
+    })
+    io.emit('dataUpdate')
+  })
+
+  // 改变大小
   socket.on('eventResize', async (data) => {
     const { _id, end } = data
     await Event.findByIdAndUpdate(_id, { $set: { end } }).catch(() => {
@@ -57,6 +76,8 @@ io.on('connection', (socket) => {
     })
     io.emit('dataUpdate')
   })
+
+  // 拖动位置
   socket.on('eventDragStop', async (data) => {
     const { _id, end, start } = data
     console.log(data)

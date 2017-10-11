@@ -4,7 +4,7 @@ const EventSchemas = new mongoose.Schema({
   title: String,
   start: String,
   end: String,
-  backgroundColor: String,
+  emergencyLevel: Number,
   id: Number
 })
 
